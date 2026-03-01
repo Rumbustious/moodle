@@ -1,0 +1,57 @@
+{{!
+  Admin audit log template.
+  @package local_helpdesk
+}}
+<div class="local-helpdesk-adminlog container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>{{#str}}adminlog, local_helpdesk{{/str}}</h2>
+        <a href="{{manageurl}}" class="btn btn-secondary btn-sm">
+            &larr; {{#str}}managetickets, local_helpdesk{{/str}}
+        </a>
+    </div>
+
+    {{! Filter by ticket }}
+    <form method="get" action="{{filterurl}}" class="form-inline mb-3">
+        <label class="mr-2" for="ticketid-filter">{{#str}}ticketid, local_helpdesk{{/str}}</label>
+        <select name="ticketid" id="ticketid-filter" class="form-control mr-2">
+            <option value="0">— {{#str}}alltickets, local_helpdesk{{/str}} —</option>
+            {{#ticketfilters}}
+            <option value="{{id}}" {{#selected}}selected{{/selected}}>#{{id}} {{subject}}</option>
+            {{/ticketfilters}}
+        </select>
+        <button type="submit" class="btn btn-primary">{{#str}}actions, local_helpdesk{{/str}}</button>
+    </form>
+
+    {{#nologs}}
+    <div class="alert alert-info">{{#str}}notickets, local_helpdesk{{/str}}</div>
+    {{/nologs}}
+
+    {{^nologs}}
+    <div class="table-responsive">
+        <table class="table table-sm table-striped generaltable">
+            <thead>
+                <tr>
+                    <th>{{#str}}ticketid, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}ticketsubject, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}loguser, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}logaction, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}logdetail, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}logtime, local_helpdesk{{/str}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#logs}}
+                <tr>
+                    <td><a href="{{ticketurl}}">#{{ticketid}}</a></td>
+                    <td>{{ticketsubject}}</td>
+                    <td>{{fullname}} <small class="text-muted">({{username}})</small></td>
+                    <td><code>{{action}}</code></td>
+                    <td>{{detail}}</td>
+                    <td>{{timecreated}}</td>
+                </tr>
+                {{/logs}}
+            </tbody>
+        </table>
+    </div>
+    {{/nologs}}
+</div>
