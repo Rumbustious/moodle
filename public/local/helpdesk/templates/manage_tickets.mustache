@@ -1,0 +1,75 @@
+{{!
+  Technical support manage tickets template.
+  @package local_helpdesk
+}}
+<div class="local-helpdesk-manage container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>{{#str}}managetickets, local_helpdesk{{/str}}</h2>
+        {{#isadmin}}
+        <a href="{{adminlogurl}}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa fa-list"></i> {{#str}}adminlog, local_helpdesk{{/str}}
+        </a>
+        {{/isadmin}}
+    </div>
+
+    {{! Status filter tabs }}
+    <ul class="nav nav-tabs mb-3">
+        {{#statusfilters}}
+        <li class="nav-item">
+            <a class="nav-link {{#selected}}active{{/selected}}" href="{{url}}">{{label}}</a>
+        </li>
+        {{/statusfilters}}
+    </ul>
+
+    {{#notickets}}
+    <div class="alert alert-info">{{#str}}notickets, local_helpdesk{{/str}}</div>
+    {{/notickets}}
+
+    {{^notickets}}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover generaltable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>{{#str}}ticketsubject, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}createdby, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}course, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}ticketpriority, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}status, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}createdon, local_helpdesk{{/str}}</th>
+                    <th>{{#str}}actions, local_helpdesk{{/str}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#tickets}}
+                <tr>
+                    <td>{{id}}</td>
+                    <td>{{subject}}</td>
+                    <td>{{ownername}} <small class="text-muted">({{ownerusername}})</small></td>
+                    <td>{{coursename}}</td>
+                    <td><span class="badge badge-{{prioritykey}}">{{priority}}</span></td>
+                    <td><span class="badge helpdesk-status-{{statuskey}}">{{status}}</span></td>
+                    <td>{{timecreated}}</td>
+                    <td>
+                        <a href="{{viewurl}}" class="btn btn-sm btn-outline-primary">
+                            {{#str}}viewticket, local_helpdesk{{/str}}
+                        </a>
+                    </td>
+                </tr>
+                {{/tickets}}
+            </tbody>
+        </table>
+    </div>
+    {{/notickets}}
+</div>
+
+<style>
+.helpdesk-status-open       { background-color: #17a2b8; color: #fff; }
+.helpdesk-status-inprogress { background-color: #ffc107; color: #212529; }
+.helpdesk-status-resolved   { background-color: #28a745; color: #fff; }
+.helpdesk-status-closed     { background-color: #6c757d; color: #fff; }
+.badge-low    { background-color: #6c757d; color: #fff; }
+.badge-medium { background-color: #17a2b8; color: #fff; }
+.badge-high   { background-color: #fd7e14; color: #fff; }
+.badge-urgent { background-color: #dc3545; color: #fff; }
+</style>
