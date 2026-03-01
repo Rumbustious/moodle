@@ -1,0 +1,213 @@
+{{!
+  Helpdesk ticket detail view template.
+  @package local_helpdesk
+}}
+<div class="local-helpdesk-ticketview container-fluid">
+
+    <div class="mb-3">
+        {{#isowner}}
+        <a href="{{ticketlisturl}}" class="btn btn-secondary btn-sm">
+            &larr; {{#str}}mytickets, local_helpdesk{{/str}}
+        </a>
+        {{/isowner}}
+        {{#issupport}}
+        <a href="{{manageurl}}" class="btn btn-secondary btn-sm">
+            &larr; {{#str}}managetickets, local_helpdesk{{/str}}
+        </a>
+        {{/issupport}}
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">
+                {{#str}}ticketdetails, local_helpdesk{{/str}} #{{ticket.id}} — {{ticket.subject}}
+            </h3>
+            <div>
+                <span class="badge helpdesk-status-{{ticket.statuskey}} mr-2">{{ticket.status}}</span>
+                <span class="badge badge-{{ticket.prioritykey}}">{{ticket.priority}}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">{{#str}}createdby, local_helpdesk{{/str}}</dt>
+                <dd class="col-sm-9">{{ticket.ownerfullname}}</dd>
+
+                <dt class="col-sm-3">{{#str}}course, local_helpdesk{{/str}}</dt>
+                <dd class="col-sm-9">{{ticket.coursename}}</dd>
+
+                <dt class="col-sm-3">{{#str}}createdon, local_helpdesk{{/str}}</dt>
+                <dd class="col-sm-9">{{ticket.timecreated}}</dd>
+
+                <dt class="col-sm-3">{{#str}}assignedto, local_helpdesk{{/str}}</dt>
+                <dd class="col-sm-9">{{ticket.assignedname}}</dd>
+            </dl>
+
+            <h5>{{#str}}ticketdescription, local_helpdesk{{/str}}</h5>
+            <div class="helpdesk-description well">{{{ticket.description}}}</div>
+
+            {{#ticket.hasattachments}}
+            <h5 class="mt-3">{{#str}}attachments, local_helpdesk{{/str}}</h5>
+            <ul class="list-unstyled">
+                {{#ticket.attachments}}
+                <li><a href="{{url}}" target="_blank"><i class="fa fa-paperclip"></i> {{filename}}</a></li>
+                {{/ticket.attachments}}
+            </ul>
+            {{/ticket.hasattachments}}
+        </div>
+    </div>
+
+    {{! Status change (support only) }}
+    {{#issupport}}
+    <div class="card mb-4">
+        <div class="card-header"><h5>{{#str}}changestatus, local_helpdesk{{/str}}</h5></div>
+        <div class="card-body">
+            <div class="form-inline">
+                <select id="helpdesk-status-select" class="form-control mr-2" data-ticketid="{{ticket.id}}">
+                    {{#statusoptions}}
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                    {{/statusoptions}}
+                </select>
+                <button id="helpdesk-status-btn" class="btn btn-primary">
+                    {{#str}}changestatus, local_helpdesk{{/str}}
+                </button>
+            </div>
+            <div id="helpdesk-status-msg" class="mt-2"></div>
+        </div>
+    </div>
+
+    {{! Open Chat (support only, if no open chat) }}
+    {{#canopenchat}}
+    <div class="card mb-4">
+        <div class="card-body">
+            <button id="helpdesk-open-chat-btn" class="btn btn-success" data-ticketid="{{ticket.id}}">
+                <i class="fa fa-comments"></i> {{#str}}openchat, local_helpdesk{{/str}}
+            </button>
+        </div>
+    </div>
+    {{/canopenchat}}
+
+    {{! Close Chat (support, if chat open) }}
+    {{#haschat}}
+    {{#issupport}}
+    <div class="card mb-4">
+        <div class="card-body">
+            <button id="helpdesk-close-chat-btn" class="btn btn-warning" data-chatid="{{chatid}}">
+                <i class="fa fa-times"></i> {{#str}}closechat, local_helpdesk{{/str}}
+            </button>
+        </div>
+    </div>
+    {{/issupport}}
+    {{/haschat}}
+    {{/issupport}}
+
+    {{! Chat window (if chat exists) }}
+    {{#haschat}}
+    <div class="card mb-4" id="helpdesk-chat-card">
+        <div class="card-header">
+            <strong>{{#str}}chat, local_helpdesk{{/str}}</strong>
+            — #{{ticket.id}} {{ticket.subject}}
+        </div>
+        <div class="card-body">
+            <div id="helpdesk-chat-messages" class="helpdesk-chat-messages"
+                 data-chatid="{{chatid}}" style="height:300px;overflow-y:auto;border:1px solid #dee2e6;padding:10px;">
+            </div>
+            <div class="input-group mt-2">
+                <input type="text" id="helpdesk-chat-input" class="form-control"
+                       placeholder="{{#str}}typemessage, local_helpdesk{{/str}}" />
+                <div class="input-group-append">
+                    <button id="helpdesk-chat-send" class="btn btn-primary">
+                        {{#str}}sendmessage, local_helpdesk{{/str}}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{/haschat}}
+
+    {{! Feedback section }}
+    {{#canopenfeedback}}
+    <div class="card mb-4" id="helpdesk-feedback-card">
+        <div class="card-header"><h5>{{#str}}leavefeedback, local_helpdesk{{/str}}</h5></div>
+        <div class="card-body">
+            <div class="form-group">
+                <label>{{#str}}feedbackrating, local_helpdesk{{/str}}</label>
+                <div id="helpdesk-star-rating" class="helpdesk-stars" data-rating="0">
+                    <span class="helpdesk-star" data-value="1">&#9733;</span>
+                    <span class="helpdesk-star" data-value="2">&#9733;</span>
+                    <span class="helpdesk-star" data-value="3">&#9733;</span>
+                    <span class="helpdesk-star" data-value="4">&#9733;</span>
+                    <span class="helpdesk-star" data-value="5">&#9733;</span>
+                </div>
+                <input type="hidden" id="helpdesk-feedback-rating" value="0" />
+            </div>
+            <div class="form-group">
+                <label for="helpdesk-feedback-comment">
+                    {{#str}}feedbackcomment, local_helpdesk{{/str}}
+                    {{#str}}feedbackoptional, local_helpdesk{{/str}}
+                </label>
+                <textarea id="helpdesk-feedback-comment" class="form-control" rows="3"></textarea>
+            </div>
+            <button id="helpdesk-feedback-submit" class="btn btn-success" data-ticketid="{{ticket.id}}">
+                {{#str}}leavefeedback, local_helpdesk{{/str}}
+            </button>
+            <div id="helpdesk-feedback-msg" class="mt-2"></div>
+        </div>
+    </div>
+    {{/canopenfeedback}}
+
+    {{#hasfeedback}}
+    <div class="card mb-4">
+        <div class="card-header"><h5>{{#str}}feedback, local_helpdesk{{/str}}</h5></div>
+        <div class="card-body">
+            <p>{{#str}}feedbackrating, local_helpdesk{{/str}}: {{feedbackrating}} / 5</p>
+            {{#feedbackcomment}}<p>{{feedbackcomment}}</p>{{/feedbackcomment}}
+        </div>
+    </div>
+    {{/hasfeedback}}
+
+</div>
+
+{{! Floating chat popup for users (populated by AMD) }}
+<div id="helpdesk-chat-popup" class="helpdesk-chat-popup d-none" role="dialog"></div>
+
+<div id="helpdesk-chat-fab" class="helpdesk-chat-fab d-none" aria-live="polite">
+    <button class="btn btn-primary btn-circle" id="helpdesk-chat-fab-btn"
+            title="{{#str}}chat, local_helpdesk{{/str}}">
+        <i class="fa fa-comments"></i>
+        <span id="helpdesk-unread-badge" class="badge badge-danger helpdesk-unread-badge"></span>
+    </button>
+</div>
+
+<style>
+.helpdesk-chat-messages .msg-mine { text-align:right; }
+.helpdesk-chat-messages .msg-mine .bubble {
+    display:inline-block; background:#007bff; color:#fff;
+    padding:6px 12px; border-radius:16px 16px 4px 16px; max-width:70%;
+}
+.helpdesk-chat-messages .msg-other .bubble {
+    display:inline-block; background:#e9ecef;
+    padding:6px 12px; border-radius:16px 16px 16px 4px; max-width:70%;
+}
+.helpdesk-chat-messages .msg-meta { font-size:0.75rem; color:#6c757d; }
+.helpdesk-chat-fab {
+    position:fixed; bottom:20px; left:20px; z-index:1050;
+}
+.btn-circle {
+    width:56px; height:56px; border-radius:50%; padding:0;
+    font-size:1.4rem; position:relative;
+}
+.helpdesk-unread-badge {
+    position:absolute; top:-4px; right:-4px; font-size:0.7rem;
+}
+.helpdesk-stars { font-size: 2rem; cursor: pointer; }
+.helpdesk-stars .helpdesk-star { color: #ccc; }
+.helpdesk-stars .helpdesk-star.active { color: #ffc107; }
+.helpdesk-status-open       { background-color: #17a2b8; color: #fff; }
+.helpdesk-status-inprogress { background-color: #ffc107; color: #212529; }
+.helpdesk-status-resolved   { background-color: #28a745; color: #fff; }
+.helpdesk-status-closed     { background-color: #6c757d; color: #fff; }
+.badge-low    { background-color: #6c757d; color: #fff; }
+.badge-medium { background-color: #17a2b8; color: #fff; }
+.badge-high   { background-color: #fd7e14; color: #fff; }
+.badge-urgent { background-color: #dc3545; color: #fff; }
+</style>
