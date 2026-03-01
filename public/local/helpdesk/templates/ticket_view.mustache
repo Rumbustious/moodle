@@ -76,7 +76,7 @@
     </div>
 
     {{! Open Chat (support only, if no open chat) }}
-    {{#canopenhat}}
+    {{#canopenchat}}
     <div class="card mb-4">
         <div class="card-body">
             <button id="helpdesk-open-chat-btn" class="btn btn-success" data-ticketid="{{ticket.id}}">
@@ -84,7 +84,7 @@
             </button>
         </div>
     </div>
-    {{/canopenhat}}
+    {{/canopenchat}}
 
     {{! Close Chat (support, if chat open) }}
     {{#haschat}}
@@ -132,13 +132,11 @@
             <div class="form-group">
                 <label>{{#str}}feedbackrating, local_helpdesk{{/str}}</label>
                 <div id="helpdesk-star-rating" class="helpdesk-stars" data-rating="0">
-                    {{#.}}
                     <span class="helpdesk-star" data-value="1">&#9733;</span>
                     <span class="helpdesk-star" data-value="2">&#9733;</span>
                     <span class="helpdesk-star" data-value="3">&#9733;</span>
                     <span class="helpdesk-star" data-value="4">&#9733;</span>
                     <span class="helpdesk-star" data-value="5">&#9733;</span>
-                    {{/.}}
                 </div>
                 <input type="hidden" id="helpdesk-feedback-rating" value="0" />
             </div>

@@ -125,7 +125,7 @@ $templatedata = [
     'statusoptions'     => $statusoptions,
     'haschat'           => !empty($chat),
     'chatid'            => !empty($chat) ? $chat->id : 0,
-    'canopenhat'        => ($issupport && empty($chat)),
+    'canopenchat'       => ($issupport && empty($chat)),
     'canopenfeedback'   => ($isowner && empty($feedback)
                             && in_array($ticket->status, ['resolved', 'closed'])),
     'hasfeedback'       => !empty($feedback),

@@ -91,7 +91,7 @@ class create_ticket_form extends \moodleform {
             null,
             [
                 'subdirs'        => 0,
-                'maxbytes'       => 671088640, // 640 MB.
+                'maxbytes'       => 640 * 1024 * 1024, // 640 MB.
                 'maxfiles'       => 5,
                 'accepted_types' => '*',
             ]);
