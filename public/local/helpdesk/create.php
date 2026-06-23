@@ -34,7 +34,7 @@ $PAGE->set_title(get_string('createticket', 'local_helpdesk'));
 $PAGE->set_heading(get_string('createticket', 'local_helpdesk'));
 $PAGE->set_pagelayout('standard');
 
-require_capability('local/helpdesk:submitticket', $context);
+// require_capability('local/helpdesk:submitticket', $context);
 
 // Enforce max 3 open tickets.
 $opencount = $DB->count_records_select(
@@ -65,6 +65,12 @@ $entry = file_prepare_standard_editor($entry, 'description', $editoropts, $conte
 
 require_once($CFG->dirroot . '/local/helpdesk/classes/form/create_ticket_form.php');
 $form = new \local_helpdesk\form\create_ticket_form();
+
+// Bind draft item IDs so the editor and filemanager use the prepared draft areas.
+$form->set_data([
+    'description_editor' => $entry->description_editor,
+    'attachments'        => $draftitemid,
+]);
 
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/local/helpdesk/index.php'));
@@ -97,7 +103,7 @@ if ($form->is_cancelled()) {
         'local_helpdesk',
         'attachments',
         $ticketid,
-        ['subdirs' => 0, 'maxfiles' => 5]
+        ['subdirs' => 0, 'maxfiles' => 5, 'maxbytes' => 640 * 1024 * 1024]
     );
 
     // Audit log.

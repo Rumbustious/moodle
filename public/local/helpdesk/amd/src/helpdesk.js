@@ -39,8 +39,11 @@ let activeChatId = 0;
 /** Polling timer reference. */
 let pollTimer = null;
 
+/** Flag to prevent concurrent message fetches (prevents double messages). */
+let isFetching = false;
+
 // ---------------------------------------------------------------------------
-// Toast helper (uses Moodle's notification or falls back to bootstrap)
+// Toast helper
 // ---------------------------------------------------------------------------
 
 /**
@@ -57,7 +60,7 @@ const showToast = (message, type = 'success') => {
 };
 
 // ---------------------------------------------------------------------------
-// Unread badge poller (bottom-left floating button)
+// Unread badge poller
 // ---------------------------------------------------------------------------
 
 /**
@@ -81,13 +84,10 @@ const pollUnread = () => {
             badge.textContent = '';
         }
 
-        // When user clicks the FAB, navigate to the chat page.
         const fabBtn = document.getElementById('helpdesk-chat-fab-btn');
-        if (fabBtn && result.chatid > 0) {
+        if (fabBtn && result.ticketid > 0) {
             fabBtn.onclick = () => {
-                // Find ticket via chat — navigate to view page.
-                // The chat id is stored; we link to helpdesk index for simplicity.
-                window.location.href = M.cfg.wwwroot + '/local/helpdesk/index.php';
+                window.location.href = M.cfg.wwwroot + '/local/helpdesk/view.php?id=' + result.ticketid;
             };
         }
         return result;
@@ -96,14 +96,8 @@ const pollUnread = () => {
     });
 };
 
-// ---------------------------------------------------------------------------
-// initUnreadPoller — called from index.php and other pages without a chat
-// ---------------------------------------------------------------------------
-
 /**
  * Start the unread count polling loop.
- * Called from pages that don't embed a full chat widget.
- *
  * @export
  */
 export const initUnreadPoller = () => {
@@ -118,8 +112,8 @@ export const initUnreadPoller = () => {
 /**
  * Append a message bubble to the chat message list.
  *
- * @param {HTMLElement} container
- * @param {Object}      msg
+ * @param {HTMLElement} container The container to append to.
+ * @param {Object} msg The message data object.
  */
 const appendMessage = (container, msg) => {
     const wrapper = document.createElement('div');
@@ -141,14 +135,22 @@ const appendMessage = (container, msg) => {
 /**
  * Fetch new messages for the active chat and append them to the container.
  *
- * @param {HTMLElement} container
- * @param {number}      chatId
+ * @param {HTMLElement} container The chat messages container.
+ * @param {number} chatId The active chat ID.
  */
 const fetchMessages = (container, chatId) => {
-    Ajax.call([{
+    // Prevent duplicate calls from overlapping.
+    if (isFetching) {
+        return Promise.resolve();
+    }
+    isFetching = true;
+
+    return Ajax.call([{
         methodname: 'local_helpdesk_get_messages',
         args: {chatid: chatId, since: lastMessageTime},
     }])[0].then((result) => {
+        isFetching = false;
+
         if (result.chatstatus === 'closed') {
             clearInterval(pollTimer);
             getString('chatclosed', 'local_helpdesk').then((str) => {
@@ -158,34 +160,32 @@ const fetchMessages = (container, chatId) => {
                 container.appendChild(notice);
                 return str;
             }).catch(() => {
-                // Ignore string fetch error.
+                // Ignore.
             });
         }
+
         result.messages.forEach((msg) => {
-            appendMessage(container, msg);
+            // Check timestamp to ensure the message isn't already rendered.
             if (msg.timecreated > lastMessageTime) {
+                appendMessage(container, msg);
                 lastMessageTime = msg.timecreated;
             }
         });
+
         if (result.messages.length) {
             container.scrollTop = container.scrollHeight;
         }
         return result;
-    }).catch(() => {
-        // Silently ignore polling errors.
+    }).catch((error) => {
+        isFetching = false;
+        throw error;
     });
 };
 
 /**
  * Initialise the chat widget on a ticket view page.
- * This sets up message polling, send button, status change,
- * open/close chat, and feedback star rating.
  *
- * @param {Object} options
- * @param {number} options.ticketid
- * @param {number} options.chatid   0 if no chat yet
- * @param {boolean} options.issupport
- * @param {string} options.subject
+ * @param {Object} options Configuration options.
  * @export
  */
 export const initChatWidget = (options) => {
@@ -194,37 +194,55 @@ export const initChatWidget = (options) => {
 
     const msgContainer = document.getElementById('helpdesk-chat-messages');
 
-    // Start chat polling if a chat is open.
     if (activeChatId && msgContainer) {
         fetchMessages(msgContainer, activeChatId);
         pollTimer = setInterval(() => fetchMessages(msgContainer, activeChatId), POLL_INTERVAL);
     }
 
-    // Also poll unread badge.
     pollUnread();
     setInterval(pollUnread, POLL_INTERVAL);
 
     // --- Send message ---
     const sendBtn = document.getElementById('helpdesk-chat-send');
     const chatInput = document.getElementById('helpdesk-chat-input');
+
     if (sendBtn && chatInput && msgContainer) {
         const doSend = () => {
             const text = chatInput.value.trim();
-            if (!text) {
+            if (!text || sendBtn.disabled) {
                 return;
             }
+
+            // Disable UI to prevent double-clicks.
+            sendBtn.disabled = true;
+            chatInput.readOnly = true;
+
             Ajax.call([{
                 methodname: 'local_helpdesk_send_message',
                 args: {chatid: activeChatId, message: text},
-            }])[0].then((result) => {
+            }])[0].then(() => {
                 chatInput.value = '';
-                fetchMessages(msgContainer, activeChatId);
-                return result;
-            }).catch(Notification.exception);
+                chatInput.readOnly = false;
+                sendBtn.disabled = false;
+                chatInput.focus();
+
+                // Fetch immediately after sending.
+                return fetchMessages(msgContainer, activeChatId);
+            }).catch((e) => {
+                sendBtn.disabled = false;
+                chatInput.readOnly = false;
+                Notification.exception(e);
+            });
         };
-        sendBtn.addEventListener('click', doSend);
+
+        sendBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            doSend();
+        });
+
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 doSend();
             }
         });
@@ -254,37 +272,31 @@ export const initChatWidget = (options) => {
         });
     }
 
-    // --- Open chat (support) ---
+    // --- Open/Close Chat ---
     const openChatBtn = document.getElementById('helpdesk-open-chat-btn');
     if (openChatBtn && issupport) {
         openChatBtn.addEventListener('click', () => {
-            Ajax.call([{
-                methodname: 'local_helpdesk_open_chat',
-                args: {ticketid},
-            }])[0].then((result) => {
-                activeChatId = result.chatid;
-                // Reload to show the chat widget properly.
-                window.location.reload();
-                return result;
-            }).catch(Notification.exception);
+            Ajax.call([{methodname: 'local_helpdesk_open_chat', args: {ticketid}}])[0]
+                .then((result) => {
+                    activeChatId = result.chatid;
+                    window.location.reload();
+                    return result;
+                }).catch(Notification.exception);
         });
     }
 
-    // --- Close chat (support) ---
     const closeChatBtn = document.getElementById('helpdesk-close-chat-btn');
     if (closeChatBtn && issupport) {
         closeChatBtn.addEventListener('click', () => {
-            Ajax.call([{
-                methodname: 'local_helpdesk_close_chat',
-                args: {chatid: activeChatId},
-            }])[0].then((result) => {
-                window.location.reload();
-                return result;
-            }).catch(Notification.exception);
+            Ajax.call([{methodname: 'local_helpdesk_close_chat', args: {chatid: activeChatId}}])[0]
+                .then((result) => {
+                    window.location.reload();
+                    return result;
+                }).catch(Notification.exception);
         });
     }
 
-    // --- Star rating ---
+    // --- Star Ratings ---
     const stars = document.querySelectorAll('.helpdesk-star');
     const ratingInput = document.getElementById('helpdesk-feedback-rating');
     if (stars.length && ratingInput) {
@@ -292,26 +304,20 @@ export const initChatWidget = (options) => {
             star.addEventListener('click', () => {
                 const val = parseInt(star.dataset.value, 10);
                 ratingInput.value = val;
-                stars.forEach((s) => {
-                    s.classList.toggle('active', parseInt(s.dataset.value, 10) <= val);
-                });
+                stars.forEach((s) => s.classList.toggle('active', parseInt(s.dataset.value, 10) <= val));
             });
             star.addEventListener('mouseover', () => {
                 const val = parseInt(star.dataset.value, 10);
-                stars.forEach((s) => {
-                    s.classList.toggle('active', parseInt(s.dataset.value, 10) <= val);
-                });
+                stars.forEach((s) => s.classList.toggle('active', parseInt(s.dataset.value, 10) <= val));
             });
             star.addEventListener('mouseout', () => {
                 const current = parseInt(ratingInput.value, 10);
-                stars.forEach((s) => {
-                    s.classList.toggle('active', parseInt(s.dataset.value, 10) <= current);
-                });
+                stars.forEach((s) => s.classList.toggle('active', parseInt(s.dataset.value, 10) <= current));
             });
         });
     }
 
-    // --- Submit feedback ---
+    // --- Submit Feedback ---
     const feedbackBtn = document.getElementById('helpdesk-feedback-submit');
     const feedbackMsg = document.getElementById('helpdesk-feedback-msg');
     if (feedbackBtn && ratingInput) {
@@ -319,10 +325,7 @@ export const initChatWidget = (options) => {
             const rating  = parseInt(ratingInput.value, 10);
             const comment = document.getElementById('helpdesk-feedback-comment')?.value || '';
             if (!rating) {
-                getString('feedbackrating', 'local_helpdesk').then((str) => {
-                    showToast(str, 'warning');
-                    return str;
-                }).catch(() => {
+                getString('feedbackrating', 'local_helpdesk').then((str) => showToast(str, 'warning')).catch(() => {
                     // Ignore.
                 });
                 return;
@@ -335,8 +338,7 @@ export const initChatWidget = (options) => {
                     getString('feedbacksubmitted', 'local_helpdesk').then((str) => {
                         showToast(str, 'success');
                         if (feedbackMsg) {
-                            feedbackMsg.innerHTML =
-                                '<div class="alert alert-success">' + str + '</div>';
+                            feedbackMsg.innerHTML = '<div class="alert alert-success">' + str + '</div>';
                         }
                         const card = document.getElementById('helpdesk-feedback-card');
                         if (card) {

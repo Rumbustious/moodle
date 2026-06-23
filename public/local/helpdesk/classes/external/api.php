@@ -79,11 +79,16 @@ class api extends external_api {
             throw new \moodle_exception('chatclosed', 'local_helpdesk');
         }
 
+        $cleanmessage = clean_param($message, PARAM_TEXT);
+        if (trim($cleanmessage) === '') {
+            throw new \moodle_exception('invalidmessage', 'local_helpdesk');
+        }
+
         $now = time();
         $record = (object)[
             'chatid'      => $chatid,
             'userid'      => $USER->id,
-            'message'     => clean_param($message, PARAM_TEXT),
+            'message'     => $cleanmessage,
             'timecreated' => $now,
         ];
         $record->id = $DB->insert_record('local_helpdesk_messages', $record);
@@ -251,11 +256,11 @@ class api extends external_api {
         self::validate_context($context);
 
         if (!isloggedin() || isguestuser()) {
-            return ['count' => 0, 'chatid' => 0];
+            return ['count' => 0, 'chatid' => 0, 'ticketid' => 0];
         }
 
         // Find open chats on tickets owned by this user that have unread support messages.
-        $sql = "SELECT COUNT(m.id) AS cnt, c.id AS chatid
+        $sql = "SELECT COUNT(m.id) AS cnt, c.id AS chatid, t.id AS ticketid
                   FROM {local_helpdesk_messages} m
                   JOIN {local_helpdesk_chats} c        ON c.id = m.chatid
                   JOIN {local_helpdesk_tickets} t       ON t.id = c.ticketid
@@ -263,16 +268,16 @@ class api extends external_api {
                    AND m.userid != :userid2
                    AND m.timeread IS NULL
                    AND c.status  = 'open'
-              GROUP BY c.id
+              GROUP BY c.id, t.id
               ORDER BY cnt DESC";
         $records = $DB->get_records_sql($sql, ['userid' => $USER->id, 'userid2' => $USER->id], 0, 1);
 
         if (empty($records)) {
-            return ['count' => 0, 'chatid' => 0];
+            return ['count' => 0, 'chatid' => 0, 'ticketid' => 0];
         }
 
         $first = reset($records);
-        return ['count' => (int)$first->cnt, 'chatid' => (int)$first->chatid];
+        return ['count' => (int)$first->cnt, 'chatid' => (int)$first->chatid, 'ticketid' => (int)$first->ticketid];
     }
 
     /**
@@ -282,8 +287,9 @@ class api extends external_api {
      */
     public static function get_unread_count_returns(): external_single_structure {
         return new external_single_structure([
-            'count'  => new external_value(PARAM_INT, 'Unread message count'),
-            'chatid' => new external_value(PARAM_INT, 'Chat id with unread messages, or 0'),
+            'count'    => new external_value(PARAM_INT, 'Unread message count'),
+            'chatid'   => new external_value(PARAM_INT, 'Chat id with unread messages, or 0'),
+            'ticketid' => new external_value(PARAM_INT, 'Ticket id with unread messages, or 0'),
         ]);
     }
 
@@ -573,7 +579,7 @@ class api extends external_api {
         $DB->insert_record('local_helpdesk_feedback', (object)[
             'ticketid'      => $ticketid,
             'userid'        => $USER->id,
-            'supportuserid' => $ticket->assignedto ?? 0,
+            'supportuserid' => $ticket->assignedto ?: null,
             'rating'        => $rating,
             'comment'       => clean_param($comment, PARAM_TEXT),
             'timecreated'   => $now,

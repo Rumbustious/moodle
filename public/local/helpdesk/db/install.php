@@ -36,9 +36,9 @@ function xmldb_local_helpdesk_install() {
     // Create the technical_support role if it does not already exist.
     if (!$DB->record_exists('role', ['shortname' => 'technical_support'])) {
         $roleid = create_role(
-            get_string('role_techsupport', 'local_helpdesk'),
+            'Technical Support',
             'technical_support',
-            get_string('role_techsupport_desc', 'local_helpdesk'),
+            'Technical support staff who handle helpdesk tickets and chat with users.',
             'user'
         );
 
@@ -49,11 +49,16 @@ function xmldb_local_helpdesk_install() {
             'local/helpdesk:viewalltickets',
             'local/helpdesk:managetickets',
             'local/helpdesk:openchat',
+            'local/helpdesk:viewowntickets', // ✅ Added missing capability
         ];
 
         foreach ($capabilities as $cap) {
             assign_capability($cap, CAP_ALLOW, $roleid, $systemcontext->id, true);
         }
+
+        // Allow this role to be assigned at the system context so it appears
+        // under Site administration → Users → Permissions → Assign system roles.
+        set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
     }
 
     return true;

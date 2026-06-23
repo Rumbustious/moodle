@@ -63,10 +63,10 @@ function local_helpdesk_pluginfile($course, $cm, $context, $filearea, $args, $fo
     }
 
     $fs       = get_file_storage();
-    $filepath = implode('/', $args);
     $filename = array_pop($args);
+    $filepath = $args ? ('/' . implode('/', $args) . '/') : '/';
 
-    $file = $fs->get_file($context->id, 'local_helpdesk', 'attachments', $itemid, '/' . $filepath . '/', $filename);
+    $file = $fs->get_file($context->id, 'local_helpdesk', 'attachments', $itemid, $filepath, $filename);
     if (!$file || $file->is_directory()) {
         return false;
     }

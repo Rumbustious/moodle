@@ -61,6 +61,7 @@ $string['ticketid']              = 'Ticket #';
 $string['ticketlist']            = 'Ticket List';
 $string['nocourseenrolled']      = 'guest';
 $string['notickets']             = 'No tickets found.';
+$string['nologs']                = 'No log entries found.';
 $string['viewticket']            = 'View Ticket';
 $string['ticketdetails']         = 'Ticket Details';
 $string['createdby']             = 'Created by';
@@ -122,4 +123,53 @@ $string['local/helpdesk:viewlog']        = 'View helpdesk ticket audit log';
 // Errors.
 $string['invalidticket']         = 'Invalid ticket.';
 $string['invalidchat']           = 'Invalid chat session.';
+$string['invalidmessage']        = 'Message cannot be empty.';
 $string['accessdenied']          = 'Access denied.';
+
+
+
+// Chatbot.
+$string['chatbottitle']          = 'Customer Service Chatbot';
+$string['chatbotintro']          = 'Ask any question related to this website. If the chatbot cannot answer, it will create a technical support ticket for you.';
+$string['chatbotquestionlabel']  = 'Your question';
+$string['chatbotaskbutton']      = 'Ask chatbot';
+$string['chatbotanswerlabel']    = 'Chatbot response';
+$string['chatbotemptyquestion']  = 'Please enter a question before submitting.';
+$string['chatbotmaxopen']        = 'I could not answer and cannot create a new ticket because you already have 3 open tickets.';
+$string['chatbotticketsubject']  = 'Chatbot escalation: user support request';
+$string['chatbotticketdesc']     = '<p><strong>Escalated by chatbot.</strong></p><p>User question:</p><p>{$a}</p>';
+$string['chatbotfallbackcreated']= 'I could not answer this question, so I created support ticket #{$a}. A technical support agent will follow up with you soon.';
+
+
+
+
+$string['allassigned'] = 'All tickets';
+$string['unassigned'] = 'Unassigned';
+$string['assignedtome'] = 'Assigned to me';
+$string['allpriorities'] = 'All priorities';
+$string['allcourses'] = 'All courses';
+$string['allusers'] = 'All users';
+$string['allassignedusers'] = 'All support agents';
+$string['advancedfilters'] = 'Advanced filters';
+$string['searchsubject'] = 'Subject...';
+$string['search']= 'Search';
+$string['fromdate'] = 'From date';
+$string['todate'] = 'To date';
+$string['applyfilters'] = 'Apply';
+$string['clearfilters'] = 'Clear filters';
+$string['assignedto'] = 'Assigned to';
+
+
+
+$string['chatbottitle'] = 'AI Assistant';
+$string['chatbotquestionlabel'] = 'Ask a question...';
+$string['chatbotemptyquestion'] = 'Please enter a question.';
+$string['chatbotmaxopen'] = 'You already have 3 open tickets. Please resolve one before creating another.';
+$string['chatbotfallbackcreated'] = 'I have created a support ticket (#{$a}) for you. A support agent will follow up soon.';
+$string['chatbotintro'] = 'Hello! I\'m your support assistant. Ask me anything about your courses or issues.';
+
+
+$string['chatbotemptyquestion'] = 'Please enter a question.';
+$string['chatbotmaxopen'] = 'You already have 3 open tickets. Please resolve one before creating another.';
+$string['chatbotfallbackcreated'] = 'Ticket #{$a} has been created. A support agent will follow up soon.';
+$string['chatbotescalationproposal'] = 'It seems this issue requires human support. I can create a ticket for you. Do you want me to do that?';
