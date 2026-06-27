@@ -33,6 +33,9 @@ defined('MOODLE_INTERNAL') || die();
 function xmldb_local_helpdesk_install() {
     global $DB;
 
+    set_config('ticketlimit', 3, 'local_helpdesk');
+    set_config('showassignedto', 1, 'local_helpdesk');
+
     // Create the technical_support role if it does not already exist.
     if (!$DB->record_exists('role', ['shortname' => 'technical_support'])) {
         $roleid = create_role(

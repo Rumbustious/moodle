@@ -28,6 +28,7 @@ require_once($CFG->libdir . '/filelib.php');
 require_login();
 
 $context = context_system::instance();
+$ticketlimit = \local_helpdesk\local\helper::get_ticket_limit();
 $PAGE->set_context($context);
 $PAGE->set_url('/local/helpdesk/create.php');
 $PAGE->set_title(get_string('createticket', 'local_helpdesk'));
@@ -36,16 +37,16 @@ $PAGE->set_pagelayout('standard');
 
 // require_capability('local/helpdesk:submitticket', $context);
 
-// Enforce max 3 open tickets.
+// Enforce configured open ticket limit.
 $opencount = $DB->count_records_select(
     'local_helpdesk_tickets',
     "userid = :userid AND status IN ('open','inprogress')",
     ['userid' => $USER->id]
 );
-if ($opencount >= 3) {
+if ($opencount >= $ticketlimit) {
     redirect(
         new moodle_url('/local/helpdesk/index.php'),
-        get_string('maxopentickets', 'local_helpdesk', $opencount),
+        get_string('maxopentickets', 'local_helpdesk', $ticketlimit),
         null,
         \core\output\notification::NOTIFY_ERROR
     );

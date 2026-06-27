@@ -38,8 +38,10 @@
                 <dt class="col-sm-3">{{#str}}createdon, local_helpdesk{{/str}}</dt>
                 <dd class="col-sm-9">{{ticket.timecreated}}</dd>
 
+                {{#showassignedto}}
                 <dt class="col-sm-3">{{#str}}assignedto, local_helpdesk{{/str}}</dt>
                 <dd class="col-sm-9">{{ticket.assignedname}}</dd>
+                {{/showassignedto}}
             </dl>
 
             <h5>{{#str}}ticketdescription, local_helpdesk{{/str}}</h5>
@@ -75,6 +77,26 @@
         </div>
     </div>
 
+    {{#showassignedto}}
+    <div class="card mb-4">
+        <div class="card-header"><h5>{{#str}}assignticket, local_helpdesk{{/str}}</h5></div>
+        <div class="card-body">
+            <form method="post" action="" class="form-inline">
+                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                <input type="hidden" name="action" value="assign">
+                <select name="assignedto" class="form-control mr-2">
+                    {{#supportoptions}}
+                    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                    {{/supportoptions}}
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    {{#str}}savechanges, core{{/str}}
+                </button>
+            </form>
+        </div>
+    </div>
+    {{/showassignedto}}
+
     {{! Open Chat (support only, if no open chat) }}
     {{#canopenchat}}
     <div class="card mb-4">
@@ -86,8 +108,18 @@
     </div>
     {{/canopenchat}}
 
+    {{#canreopenchat}}
+    <div class="card mb-4">
+        <div class="card-body">
+            <button id="helpdesk-open-chat-btn" class="btn btn-success" data-ticketid="{{ticket.id}}">
+                <i class="fa fa-comments"></i> {{#str}}reopenchat, local_helpdesk{{/str}}
+            </button>
+        </div>
+    </div>
+    {{/canreopenchat}}
+
     {{! Close Chat (support, if chat open) }}
-    {{#haschat}}
+    {{#chatopen}}
     {{#issupport}}
     <div class="card mb-4">
         <div class="card-body">
@@ -97,7 +129,7 @@
         </div>
     </div>
     {{/issupport}}
-    {{/haschat}}
+    {{/chatopen}}
     {{/issupport}}
 
     {{! Chat window (if chat exists) }}
@@ -111,6 +143,7 @@
             <div id="helpdesk-chat-messages" class="helpdesk-chat-messages"
                  data-chatid="{{chatid}}" style="height:300px;overflow-y:auto;border:1px solid #dee2e6;padding:10px;">
             </div>
+            {{#chatopen}}
             <div class="input-group mt-2">
                 <input type="text" id="helpdesk-chat-input" class="form-control"
                        placeholder="{{#str}}typemessage, local_helpdesk{{/str}}" />
@@ -120,6 +153,10 @@
                     </button>
                 </div>
             </div>
+            {{/chatopen}}
+            {{#chatclosed}}
+            <p class="text-muted text-center mt-2 mb-0">{{#str}}chatclosed, local_helpdesk{{/str}}</p>
+            {{/chatclosed}}
         </div>
     </div>
     {{/haschat}}

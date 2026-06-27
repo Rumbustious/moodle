@@ -13,6 +13,7 @@ require_once($CFG->libdir . '/tablelib.php');
 require_login();
 
 $context = context_system::instance();
+$ticketlimit = \local_helpdesk\local\helper::get_ticket_limit();
 
 $PAGE->set_context($context);
 $PAGE->set_url('/local/helpdesk/index.php');
@@ -68,8 +69,8 @@ $templatedata = [
     'tickets'        => $ticketrows,
     'notickets'      => empty($ticketrows),
     'createurl'      => (new moodle_url('/local/helpdesk/create.php'))->out(false),
-    'cancreate'      => ($opencount < 3),
-    'maxopentickets' => get_string('maxopentickets', 'local_helpdesk', 3),
+    'cancreate'      => ($opencount < $ticketlimit),
+    'maxopentickets' => get_string('maxopentickets', 'local_helpdesk', $ticketlimit),
 ];
 
 echo $OUTPUT->header();

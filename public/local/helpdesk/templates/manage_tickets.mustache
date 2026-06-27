@@ -9,11 +9,20 @@
         <h2>{{#str}}managetickets, local_helpdesk{{/str}}</h2>
 
         {{#isadmin}}
-        <a href="{{adminlogurl}}" class="btn btn-outline-secondary btn-sm">
-            <i class="fa fa-list"></i> {{#str}}adminlog, local_helpdesk{{/str}}
-        </a>
+        <div class="btn-group">
+            <a href="{{exporturl}}" class="btn btn-outline-primary btn-sm">
+                <i class="fa fa-download"></i> {{#str}}exporttickets, local_helpdesk{{/str}}
+            </a>
+            <a href="{{settingsurl}}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-cog"></i> {{#str}}settings, core{{/str}}
+            </a>
+            <a href="{{adminlogurl}}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-list"></i> {{#str}}adminlog, local_helpdesk{{/str}}
+            </a>
+        </div>
         {{/isadmin}}
     </div>
+
 
     <!-- STATUS TABS -->
     <ul class="nav nav-tabs mb-2">
@@ -25,6 +34,24 @@
         </li>
         {{/statustabs}}
     </ul>
+
+    {{#showdashboard}}
+    <div class="row mb-3">
+        {{#dashboardtiles}}
+        <div class="col-sm-6 col-xl-3 mb-3">
+            <div class="card helpdesk-dashboard-tile helpdesk-dashboard-{{class}} h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="helpdesk-dashboard-label">{{label}}</div>
+                        <div class="helpdesk-dashboard-value">{{value}}</div>
+                    </div>
+                    <i class="fa {{icon}} helpdesk-dashboard-icon" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+        {{/dashboardtiles}}
+    </div>
+    {{/showdashboard}}
 
     <!-- PRIORITY TABS -->
     <ul class="nav nav-pills mb-2">
@@ -239,4 +266,13 @@ document.addEventListener("DOMContentLoaded", function () {
 .badge-medium { background-color: #17a2b8; color: #fff; }
 .badge-high   { background-color: #fd7e14; color: #fff; }
 .badge-urgent { background-color: #dc3545; color: #fff; }
+
+.helpdesk-dashboard-tile { border-left: 4px solid #6c757d; border-radius: 6px; }
+.helpdesk-dashboard-info { border-left-color: #17a2b8; }
+.helpdesk-dashboard-warning { border-left-color: #ffc107; }
+.helpdesk-dashboard-success { border-left-color: #28a745; }
+.helpdesk-dashboard-danger { border-left-color: #dc3545; }
+.helpdesk-dashboard-label { color: #6c757d; font-size: .875rem; font-weight: 600; }
+.helpdesk-dashboard-value { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+.helpdesk-dashboard-icon { color: #6c757d; font-size: 2rem; opacity: .35; }
 </style>

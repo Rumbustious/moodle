@@ -14,6 +14,7 @@ require_capability('local/helpdesk:viewalltickets', $context);
 // ================= PAGINATION =================
 $perpage = 10;
 $page = optional_param('page', 0, PARAM_INT);
+$isadmin = is_siteadmin();
 
 // ================= FILTERS =================
 $statusfilter       = optional_param('status', '', PARAM_ALPHA);
@@ -39,8 +40,6 @@ if (!in_array($priorityfilter, $validpriorities)) $priorityfilter = '';
 $validassignments = ['all', 'unassigned', 'me'];
 if (!in_array($assignmentfilter, $validassignments)) $assignmentfilter = 'all';
 
-
-
 if ($createdfromstring !== '') {
     $timestamp = strtotime($createdfromstring . ' 00:00:00');
     if ($timestamp !== false) {
@@ -52,6 +51,53 @@ if ($createdtostring !== '') {
     if ($timestamp !== false) {
         $createdtofilter = $timestamp;
     }
+}
+
+// ================= TABS =================
+$statustabs = [[
+    'label' => get_string('alltickets', 'local_helpdesk'),
+    'url' => (new moodle_url('/local/helpdesk/manage.php'))->out(false),
+    'selected' => empty($statusfilter),
+]];
+foreach ($validstatuses as $status) {
+    $statustabs[] = [
+        'label' => get_string('status_' . $status, 'local_helpdesk'),
+        'url' => (new moodle_url('/local/helpdesk/manage.php', ['status' => $status]))->out(false),
+        'selected' => ($statusfilter === $status),
+    ];
+}
+
+$prioritytabs = [[
+    'label' => get_string('allpriorities', 'local_helpdesk'),
+    'url' => (new moodle_url('/local/helpdesk/manage.php', ['status' => $statusfilter]))->out(false),
+    'selected' => empty($priorityfilter),
+]];
+foreach ($validpriorities as $priority) {
+    $prioritytabs[] = [
+        'label' => get_string('priority' . $priority, 'local_helpdesk'),
+        'url' => (new moodle_url('/local/helpdesk/manage.php', [
+            'status' => $statusfilter,
+            'priority' => $priority,
+        ]))->out(false),
+        'selected' => ($priorityfilter === $priority),
+    ];
+}
+
+$assignmenttabs = [];
+foreach ([
+    'all' => get_string('allassigned', 'local_helpdesk'),
+    'unassigned' => get_string('unassigned', 'local_helpdesk'),
+    'me' => get_string('assignedtome', 'local_helpdesk'),
+] as $assignment => $label) {
+    $assignmenttabs[] = [
+        'label' => $label,
+        'url' => (new moodle_url('/local/helpdesk/manage.php', [
+            'status' => $statusfilter,
+            'priority' => $priorityfilter,
+            'assigned' => $assignment,
+        ]))->out(false),
+        'selected' => ($assignmentfilter === $assignment),
+    ];
 }
 
 // ================= WHERE =================
@@ -107,6 +153,52 @@ $whereclause = empty($where) ? '1=1' : implode(' AND ', $where);
 
 // ================= COUNT =================
 $totalcount = $DB->count_records_select('local_helpdesk_tickets', $whereclause, $params);
+
+// ================= DASHBOARD =================
+$showdashboard = \local_helpdesk\local\helper::show_dashboard();
+$dashboardtiles = [];
+if ($showdashboard) {
+    $dashboardtiles = [
+        [
+            'label' => get_string('dashboard_open', 'local_helpdesk'),
+            'value' => $DB->count_records('local_helpdesk_tickets', ['status' => 'open']),
+            'class' => 'info',
+            'icon' => 'fa-folder-open',
+        ],
+        [
+            'label' => get_string('dashboard_unanswered', 'local_helpdesk'),
+            'value' => $DB->count_records_sql("
+                SELECT COUNT(1)
+                  FROM {local_helpdesk_tickets} t
+                 WHERE t.status IN ('open', 'inprogress')
+                   AND NOT EXISTS (
+                       SELECT 1
+                         FROM {local_helpdesk_chats} c
+                         JOIN {local_helpdesk_messages} m ON m.chatid = c.id
+                        WHERE c.ticketid = t.id
+                          AND m.userid <> t.userid
+                   )
+            "),
+            'class' => 'warning',
+            'icon' => 'fa-question-circle',
+        ],
+        [
+            'label' => get_string('dashboard_completed', 'local_helpdesk'),
+            'value' => $DB->count_records_select(
+                'local_helpdesk_tickets',
+                "status IN ('resolved', 'closed')"
+            ),
+            'class' => 'success',
+            'icon' => 'fa-check-circle',
+        ],
+        [
+            'label' => get_string('dashboard_urgent', 'local_helpdesk'),
+            'value' => $DB->count_records('local_helpdesk_tickets', ['priority' => 'urgent']),
+            'class' => 'danger',
+            'icon' => 'fa-exclamation-triangle',
+        ],
+    ];
+}
 
 // ================= FETCH =================
 $tickets = $DB->get_records_select(
@@ -228,6 +320,8 @@ if ($distinctassigned) {
 $templatedata = [
     'tickets' => $ticketrows,
     'notickets' => empty($ticketrows),
+    'showdashboard' => $showdashboard,
+    'dashboardtiles' => $dashboardtiles,
 
     'courseoptions' => $courseoptions,
     'useroptions' => $useroptions,
@@ -237,11 +331,24 @@ $templatedata = [
     'courseid' => $coursefilter,
     'createdby' => $createdbyfilter,
     'assignedto' => $assignedtofilter,
+    'ticketid' => $ticketidfilter,
+    'createdfrom' => $createdfromstring,
+    'createdto' => $createdtostring,
 
     'page' => $page,
     'perpage' => $perpage,
     'totalcount' => $totalcount,
 
+    'isadmin' => $isadmin,
+    'adminlogurl' => (new moodle_url('/local/helpdesk/admin_log.php'))->out(false),
+    'settingsurl' => (new moodle_url('/local/helpdesk/admin_settings.php'))->out(false),
+    'exporturl' => (new moodle_url('/local/helpdesk/export.php'))->out(false),
+    'filterformurl' => (new moodle_url('/local/helpdesk/manage.php'))->out(false),
+    'statustabs' => $statustabs,
+    'prioritytabs' => $prioritytabs,
+    'assignmenttabs' => $assignmenttabs,
+    'communityurl' => (new moodle_url('/local/community/pages/index.php'))->out(false),
+    'communityavailable' => file_exists($CFG->dirroot . '/local/community/version.php'),
 ];
 
 echo $OUTPUT->header();

@@ -47,7 +47,7 @@ $string['priorityurgent']        = 'Urgent';
 $string['nocourseguest']         = 'Guest (no course)';
 $string['ticketsubmitted']       = 'Your ticket has been submitted successfully.';
 $string['ticketsubmitted_title'] = 'Ticket Submitted';
-$string['maxopentickets']        = 'You already have {$a} open tickets. You can have a maximum of 3 open tickets at a time.';
+$string['maxopentickets']        = 'You can have a maximum of {$a} open tickets at a time.';
 
 // Ticket status.
 $string['status']                = 'Status';
@@ -73,6 +73,7 @@ $string['course']                = 'Course';
 // Chat.
 $string['chat']                  = 'Chat';
 $string['openchat']              = 'Open Chat';
+$string['reopenchat']            = 'Re-open Chat';
 $string['closechat']             = 'Close Chat';
 $string['chatstarted']           = 'A support representative has started a chat for ticket #{$a}';
 $string['chatstarted_subject']   = 'New Support Chat Started';
@@ -98,8 +99,24 @@ $string['managetickets']         = 'Manage Tickets';
 $string['changestatus']          = 'Change Status';
 $string['statuschanged']         = 'Ticket status changed to {$a}';
 $string['statuschanged_subject'] = 'Helpdesk Ticket Status Update';
-$string['assignticket']          = 'Assign to me';
+$string['assignticket']          = 'Assign Ticket';
 $string['actions']               = 'Actions';
+$string['exporttickets']         = 'Export Tickets';
+$string['helpdesksettings']      = 'Helpdesk Settings';
+$string['ticketlimit']           = 'Open ticket limit per user';
+$string['showassignedto']        = 'Show assigned-to field on tickets';
+$string['showdashboard']         = 'Show dashboard on manage tickets page';
+$string['settingssaved']         = 'Helpdesk settings saved.';
+$string['technicalsupportusers'] = 'Technical support users';
+$string['technicalsupportusers_desc'] = 'Use Moodle role assignment to grant users the Technical Support role at system level.';
+$string['assigntechnicalsupport'] = 'Assign Technical Support role';
+$string['technicalsupportrolenotfound'] = 'The technical_support role was not found.';
+$string['nosupportusers']        = 'No technical support users are assigned yet.';
+$string['dashboard_open']        = 'Open tickets';
+$string['dashboard_unanswered']  = 'Unanswered tickets';
+$string['dashboard_completed']   = 'Completed tickets';
+$string['dashboard_urgent']      = 'Urgent tickets';
+$string['community']             = 'Community';
 
 // Admin log.
 $string['ticketlog']             = 'Ticket Action Log';
@@ -135,7 +152,7 @@ $string['chatbotquestionlabel']  = 'Your question';
 $string['chatbotaskbutton']      = 'Ask chatbot';
 $string['chatbotanswerlabel']    = 'Chatbot response';
 $string['chatbotemptyquestion']  = 'Please enter a question before submitting.';
-$string['chatbotmaxopen']        = 'I could not answer and cannot create a new ticket because you already have 3 open tickets.';
+$string['chatbotmaxopen']        = 'I could not answer and cannot create a new ticket because you have reached your open ticket limit.';
 $string['chatbotticketsubject']  = 'Chatbot escalation: user support request';
 $string['chatbotticketdesc']     = '<p><strong>Escalated by chatbot.</strong></p><p>User question:</p><p>{$a}</p>';
 $string['chatbotfallbackcreated']= 'I could not answer this question, so I created support ticket #{$a}. A technical support agent will follow up with you soon.';
@@ -164,12 +181,12 @@ $string['assignedto'] = 'Assigned to';
 $string['chatbottitle'] = 'AI Assistant';
 $string['chatbotquestionlabel'] = 'Ask a question...';
 $string['chatbotemptyquestion'] = 'Please enter a question.';
-$string['chatbotmaxopen'] = 'You already have 3 open tickets. Please resolve one before creating another.';
+$string['chatbotmaxopen'] = 'You have reached your open ticket limit. Please resolve one before creating another.';
 $string['chatbotfallbackcreated'] = 'I have created a support ticket (#{$a}) for you. A support agent will follow up soon.';
 $string['chatbotintro'] = 'Hello! I\'m your support assistant. Ask me anything about your courses or issues.';
 
 
 $string['chatbotemptyquestion'] = 'Please enter a question.';
-$string['chatbotmaxopen'] = 'You already have 3 open tickets. Please resolve one before creating another.';
+$string['chatbotmaxopen'] = 'You have reached your open ticket limit. Please resolve one before creating another.';
 $string['chatbotfallbackcreated'] = 'Ticket #{$a} has been created. A support agent will follow up soon.';
 $string['chatbotescalationproposal'] = 'It seems this issue requires human support. I can create a ticket for you. Do you want me to do that?';

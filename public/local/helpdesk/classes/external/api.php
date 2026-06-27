@@ -176,7 +176,7 @@ class api extends external_api {
 
         $sql = "SELECT m.*, u.username, u.firstname, u.lastname
                   FROM {local_helpdesk_messages} m
-                  JOIN {user} u ON u.id = m.userid
+             LEFT JOIN {user} u ON u.id = m.userid
                  WHERE m.chatid = :chatid AND m.timecreated > :since
               ORDER BY m.timecreated ASC";
         $rows = $DB->get_records_sql($sql, ['chatid' => $chatid, 'since' => $since]);
@@ -194,8 +194,8 @@ class api extends external_api {
             $messages[] = [
                 'id'          => (int)$row->id,
                 'userid'      => (int)$row->userid,
-                'username'    => $row->username,
-                'fullname'    => fullname($row),
+                'username'    => $row->username ?? 'system',
+                'fullname'    => empty($row->userid) ? get_string('system', 'core') : fullname($row),
                 'message'     => $row->message,
                 'timecreated' => (int)$row->timecreated,
                 'ismine'      => ($row->userid == $USER->id),
@@ -411,10 +411,30 @@ class api extends external_api {
 
         $ticket = $DB->get_record('local_helpdesk_tickets', ['id' => $ticketid], '*', MUST_EXIST);
 
-        // Check if there is already an open chat.
-        $existing = $DB->get_record('local_helpdesk_chats',
-            ['ticketid' => $ticketid, 'status' => 'open']);
+        // Check if there is already a chat. Reopen the existing chat so history
+        // stays attached to the ticket instead of starting fresh.
+        $existing = $DB->get_record_sql(
+            "SELECT *
+               FROM {local_helpdesk_chats}
+              WHERE ticketid = :ticketid
+           ORDER BY timecreated DESC, id DESC",
+            ['ticketid' => $ticketid],
+            IGNORE_MULTIPLE
+        );
         if ($existing) {
+            if ($existing->status !== 'open') {
+                $now = time();
+                $DB->set_field('local_helpdesk_chats', 'status', 'open', ['id' => $existing->id]);
+                $DB->set_field('local_helpdesk_chats', 'timemodified', $now, ['id' => $existing->id]);
+
+                $DB->insert_record('local_helpdesk_ticket_log', (object)[
+                    'ticketid'    => $ticketid,
+                    'userid'      => $USER->id,
+                    'action'      => 'chat_reopened',
+                    'detail'      => "Chat session #{$existing->id} reopened",
+                    'timecreated' => $now,
+                ]);
+            }
             return ['chatid' => (int)$existing->id];
         }
 

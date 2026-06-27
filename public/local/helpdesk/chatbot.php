@@ -28,6 +28,7 @@ $PAGE->set_pagelayout('standard');
 $question = optional_param('question', '', PARAM_TEXT);
 $response = '';
 $createdticketid = 0;
+$ticketlimit = \local_helpdesk\local\helper::get_ticket_limit();
 
 // 3. Logic Processing
 if (data_submitted() && confirm_sesskey()) {
@@ -58,7 +59,7 @@ if (data_submitted() && confirm_sesskey()) {
                     ['userid' => $USER->id]
                 );
 
-                if ($opencount >= 3) {
+                if ($opencount >= $ticketlimit) {
                     $response = get_string('chatbotmaxopen', 'local_helpdesk');
                 } else {
                     $now = time();

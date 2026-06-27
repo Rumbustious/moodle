@@ -42,6 +42,35 @@ if (!$issupport && !$isowner) {
     throw new moodle_exception('accessdenied', 'local_helpdesk');
 }
 
+if ($issupport && data_submitted() && confirm_sesskey()) {
+    $action = optional_param('action', '', PARAM_ALPHA);
+    if ($action === 'assign') {
+        require_capability('local/helpdesk:managetickets', $context);
+
+        $assignedto = optional_param('assignedto', 0, PARAM_INT);
+        $supportusers = \local_helpdesk\local\helper::get_technical_support_users();
+
+        if ($assignedto > 0 && !array_key_exists($assignedto, $supportusers)) {
+            throw new moodle_exception('invaliduser', 'error');
+        }
+
+        $oldassignedto = empty($ticket->assignedto) ? 0 : (int)$ticket->assignedto;
+        $now = time();
+        $DB->set_field('local_helpdesk_tickets', 'assignedto', $assignedto ?: null, ['id' => $ticketid]);
+        $DB->set_field('local_helpdesk_tickets', 'timemodified', $now, ['id' => $ticketid]);
+
+        $DB->insert_record('local_helpdesk_ticket_log', (object)[
+            'ticketid'    => $ticketid,
+            'userid'      => $USER->id,
+            'action'      => 'assigned',
+            'detail'      => "Assigned user changed from {$oldassignedto} to {$assignedto}",
+            'timecreated' => $now,
+        ]);
+
+        redirect(new moodle_url('/local/helpdesk/view.php', ['id' => $ticketid]));
+    }
+}
+
 $PAGE->set_title(get_string('ticketdetails', 'local_helpdesk') . ' #' . $ticket->id);
 $PAGE->set_heading(get_string('ticketdetails', 'local_helpdesk') . ' #' . $ticket->id);
 
@@ -65,9 +94,18 @@ if (!empty($ticket->assignedto)) {
         $assignedname = fullname($support);
     }
 }
+$supportoptions = \local_helpdesk\local\helper::get_support_user_options(empty($ticket->assignedto) ? 0 : (int)$ticket->assignedto);
 
-// Fetch open chat session.
-$chat = $DB->get_record('local_helpdesk_chats', ['ticketid' => $ticketid, 'status' => 'open']);
+// Fetch the ticket chat. Existing installs may have more than one chat because
+// older code created a new row after close; use the newest row and reopen it.
+$chat = $DB->get_record_sql(
+    "SELECT *
+       FROM {local_helpdesk_chats}
+      WHERE ticketid = :ticketid
+   ORDER BY timecreated DESC, id DESC",
+    ['ticketid' => $ticketid],
+    IGNORE_MULTIPLE
+);
 
 // Fetch feedback.
 $feedback = $DB->get_record('local_helpdesk_feedback', ['ticketid' => $ticketid, 'userid' => $USER->id]);
@@ -122,10 +160,16 @@ $templatedata = [
     ],
     'issupport'         => $issupport,
     'isowner'           => $isowner,
+    'showassignedto'    => \local_helpdesk\local\helper::show_assigned_to(),
+    'supportoptions'    => $supportoptions,
+    'sesskey'           => sesskey(),
     'statusoptions'     => $statusoptions,
     'haschat'           => !empty($chat),
     'chatid'            => !empty($chat) ? $chat->id : 0,
+    'chatopen'          => (!empty($chat) && $chat->status === 'open'),
+    'chatclosed'        => (!empty($chat) && $chat->status === 'closed'),
     'canopenchat'       => ($issupport && empty($chat)),
+    'canreopenchat'     => ($issupport && !empty($chat) && $chat->status === 'closed'),
     'canopenfeedback'   => ($isowner && empty($feedback)
                             && in_array($ticket->status, ['resolved', 'closed'])),
     'hasfeedback'       => !empty($feedback),

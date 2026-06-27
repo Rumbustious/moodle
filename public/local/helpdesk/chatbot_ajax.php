@@ -17,6 +17,7 @@ require_login();
 
 $context = context_system::instance();
 // require_capability('local_helpdesk:viewowntickets', $context);
+$ticketlimit = \local_helpdesk\local\helper::get_ticket_limit();
 
 header('Content-Type: application/json');
 
@@ -49,7 +50,7 @@ if (!empty($ai['escalate'])) {
         ['userid' => $USER->id]
     );
 
-    if ($opencount >= 3) {
+    if ($opencount >= $ticketlimit) {
         echo json_encode(['reply' => get_string('chatbotmaxopen', 'local_helpdesk'), 'escalated' => false]);
         exit;
     }

@@ -145,5 +145,34 @@ function xmldb_local_helpdesk_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026030106, 'local', 'helpdesk');
     }
 
+    if ($oldversion < 2026030107) {
+        if (get_config('local_helpdesk', 'ticketlimit') === false) {
+            set_config('ticketlimit', 3, 'local_helpdesk');
+        }
+        if (get_config('local_helpdesk', 'showassignedto') === false) {
+            set_config('showassignedto', 1, 'local_helpdesk');
+        }
+
+        $role = $DB->get_record('role', ['shortname' => 'technical_support']);
+        if ($role) {
+            $systemcontext = context_system::instance();
+
+            foreach ([
+                'local/helpdesk:viewalltickets',
+                'local/helpdesk:managetickets',
+                'local/helpdesk:openchat',
+                'local/helpdesk:viewowntickets',
+            ] as $cap) {
+                unassign_capability($cap, $role->id, $systemcontext->id);
+                assign_capability($cap, CAP_ALLOW, $role->id, $systemcontext->id, true);
+            }
+
+            set_role_contextlevels($role->id, [CONTEXT_SYSTEM]);
+            accesslib_clear_all_caches(true);
+        }
+
+        upgrade_plugin_savepoint(true, 2026030107, 'local', 'helpdesk');
+    }
+
     return true;
 }

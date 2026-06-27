@@ -115,14 +115,15 @@ class create_ticket_form extends \moodleform {
             $errors['subject'] = get_string('required');
         }
 
-        // Enforce maximum of 3 open tickets per user.
+        // Enforce configured open ticket limit per user.
+        $ticketlimit = \local_helpdesk\local\helper::get_ticket_limit();
         $opencount = $DB->count_records_select(
             'local_helpdesk_tickets',
             "userid = :userid AND status IN ('open','inprogress')",
             ['userid' => $USER->id]
         );
-        if ($opencount >= 3) {
-            $errors['subject'] = get_string('maxopentickets', 'local_helpdesk', $opencount);
+        if ($opencount >= $ticketlimit) {
+            $errors['subject'] = get_string('maxopentickets', 'local_helpdesk', $ticketlimit);
         }
 
         return $errors;

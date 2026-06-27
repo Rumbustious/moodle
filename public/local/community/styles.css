@@ -1,0 +1,21 @@
+.hover-bg-light:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}
+
+.bg-brown {
+    background-color: #cd7f32 !important;
+    color: white;
+}
+
+.podium-item {
+    transition: transform 0.3s ease;
+}
+
+.podium-item:hover {
+    transform: translateY(-5px);
+}

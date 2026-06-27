@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/community/db" VERSION="2026022400" COMMENT="Global community"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+
+    <TABLES>
+
+        <TABLE NAME="local_community_posts" COMMENT="Community posts">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="title" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="content" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="posttype" TYPE="char" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+
+        <TABLE NAME="local_community_answers" COMMENT="Answers">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="postid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="content" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="isaccepted" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+
+        <TABLE NAME="local_community_votes" COMMENT="Votes">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="postid" TYPE="int" LENGTH="10" DEFAULT="0"/>
+                <FIELD NAME="answerid" TYPE="int" LENGTH="10" DEFAULT="0"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="value" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+
+        <TABLE NAME="local_community_userrep">
+        <FIELDS>
+            <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+            <FIELD NAME="reputation" TYPE="int" LENGTH="10" DEFAULT="0"/>
+        </FIELDS>
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="userid"/>
+        </KEYS>
+     </TABLE>
+
+    <TABLE NAME="local_community_tags">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="100"/>
+    </FIELDS>
+    </TABLE>
+
+    <TABLE NAME="local_community_post_tags">
+        <FIELDS>
+            <FIELD NAME="postid" TYPE="int"/>
+            <FIELD NAME="tagid" TYPE="int"/>
+        </FIELDS>
+    </TABLE>
+
+    </TABLES>
+</XMLDB>
